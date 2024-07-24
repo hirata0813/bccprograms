@@ -7,7 +7,7 @@ shid=$$
 sudo /home/hirata/bccprograms/ppid-candidates.py $shid &
 
 # トレース対象のプログラムを起動
-mpirun -np 2 /usr/local/bin/sample.mpi
+ls
 
 # eBPFプログラムを終了
 sudo kill $(ps -C ppid-candidates -o pid=)
