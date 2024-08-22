@@ -4,6 +4,13 @@ from time import sleep
 import sys
 import ctypes
 
+# 監視対象起動プログラムを起動
+
+
+# 監視対象起動プログラムのPIDを取得
+
+
+# 取得したPIDとともにBCCをロード
 b = BPF(src_file="./ppidlist.bpf.c")
 
 # 大元のプロセス(このプロセスの親プロセス)のPIDを登録
