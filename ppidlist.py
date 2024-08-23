@@ -4,10 +4,10 @@ from time import sleep
 import ctypes
 import subprocess
 
-# 監視対象起動プログラムを起動
+# 監視対象プログラムを起動
 subprocess.run("./tracing_targets.sh &", shell=True)
 
-# 監視対象起動プログラムのPIDを取得
+# 監視対象プログラムのPIDを取得
 subprocess.run("pgrep tracing_targets > rootid.txt", shell=True)
 rootid = int(open('rootid.txt', 'r', encoding='UTF-8').read())
 rootid = ctypes.c_uint(rootid)
@@ -17,7 +17,7 @@ subprocess.run("rm -rf rootid.txt", shell=True)
 # 取得したPIDとともにBCCをロード
 b = BPF(src_file="./ppidlist.bpf.c")
 
-# ppidlistに監視対象起動プログラムのPIDを登録
+# ppidlistに監視対象プログラムのPIDを登録
 ppidlist = b.get_table("ppidlist")
 ppidlist[rootid] = ctypes.c_uint(0)
 
