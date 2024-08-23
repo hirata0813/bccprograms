@@ -1,7 +1,6 @@
 #!/usr/bin/python3  
 from bcc import BPF
 from time import sleep
-import sys
 import ctypes
 import subprocess
 
@@ -10,20 +9,17 @@ subprocess.run("./tracing_targets.sh &", shell=True)
 
 # 監視対象起動プログラムのPIDを取得
 subprocess.run("pgrep tracing_targets > rootid.txt", shell=True)
-rootid = open('rootid.txt', 'r', encoding='UTF-8').read()
+rootid = int(open('rootid.txt', 'r', encoding='UTF-8').read())
+rootid = ctypes.c_uint(rootid)
 subprocess.run("rm -rf rootid.txt", shell=True)
 
 
 # 取得したPIDとともにBCCをロード
 b = BPF(src_file="./ppidlist.bpf.c")
 
-# 大元のプロセス(このプロセスの親プロセス)のPIDを登録
-# これは第一引数で渡す
-args = sys.argv
-shid = int(args[1])
-shid = ctypes.c_uint(shid)
+# ppidlistに監視対象起動プログラムのPIDを登録
 ppidlist = b.get_table("ppidlist")
-ppidlist[shid] = ctypes.c_uint(0)
+ppidlist[rootid] = ctypes.c_uint(0)
 
 # eBPFプログラムをkprobeにアタッチ
 b.attach_kprobe(event=b.get_syscall_fnname("execve"), fn_name="trace_execve")
