@@ -2,10 +2,7 @@
 
 
 sleep 5 #eBPFが起動するまで少し待つ
-echo "Tracing Targets Start"
-sleep 10
-cat test.txt
-echo "Tracing Targets End"
+python3 /home/hirata/git/examples/mnist/main.py > /dev/null #MNISTを動かす
 
 # eBPFを停止
 #./stop_trace.sh
