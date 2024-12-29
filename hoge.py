@@ -5,11 +5,6 @@ from time import sleep
 import ctypes
 import subprocess
 
-def print_event(cpu, data, size):
-    event = b["events"].event(data)
-    syscall = event.syscallnum
-    print(f"SYSCALL:{syscall}")
-    #print(f"SYSCALL:{event.syscallnum} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
 
 def main():
     # 監視対象プログラムを起動
@@ -37,6 +32,11 @@ def main():
     b.attach_kprobe(event=b.get_syscall_fnname("unlink"), fn_name="syscall__unlink")
     
     
+    def print_event(cpu, data, size):
+        event = b["events"].event(data)
+        syscall = event.syscallnum
+        print(f"SYSCALL:{syscall}")
+        #print(f"SYSCALL:{event.syscallnum} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
     
     b["events"].open_perf_buffer(print_event)
     while True:
