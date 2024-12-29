@@ -7,5 +7,5 @@
 shid=$(pgrep tracing_targets)
 
 # 監視対象プログラムのPIDとともに，Pythonプログラムを起動
-sudo ./ppidlist.py $shid 2> /dev/null
+sudo ./hoge.py $shid 2> /dev/null
 
