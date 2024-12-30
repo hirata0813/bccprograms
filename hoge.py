@@ -4,7 +4,7 @@ from bcc import BPF
 from time import sleep
 import ctypes
 import subprocess
-
+import socket
 
 def main():
     # 監視対象プログラムを起動
@@ -30,20 +30,32 @@ def main():
     b.attach_kprobe(event=b.get_syscall_fnname("openat"), fn_name="syscall__openat")
     b.attach_kprobe(event=b.get_syscall_fnname("link"), fn_name="syscall__link")
     b.attach_kprobe(event=b.get_syscall_fnname("unlink"), fn_name="syscall__unlink")
+
+    M_SIZE = 1024
+    
+    # スケジューラが動作する計算機のアドレスを用意
+    serv_address = ('127.0.0.1', 8890)
+    
+    # ソケットを作成する
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
     
     def print_event(cpu, data, size):
+        # BPF MAP の内容を変数に代入
         event = b["events"].event(data)
         syscall = event.syscallnum
         print(f"SYSCALL:{syscall}")
         #print(f"SYSCALL:{event.syscallnum} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
+
+        # 代入されたシステムコール情報を集約し，ジョブ状態を取得
+        # 取得したジョブ状態をスケジューラに通知
+        send_len = sock.sendto(syscall.encode('utf-8'), serv_address)
+        print(f"Completed job state sending SYSCALL:{syscall}")
+
     
     b["events"].open_perf_buffer(print_event)
     while True:
         try:
-            # BPF MAP の内容を変数に代入
-            # 代入されたシステムコール情報を集約し，ジョブ状態を取得
-            # 取得したジョブ状態をスケジューラに通知
             b.perf_buffer_poll()
         except KeyboardInterrupt:
             exit()
