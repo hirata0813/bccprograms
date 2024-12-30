@@ -44,12 +44,12 @@ def main():
         # BPF MAP の内容を変数に代入
         event = b["events"].event(data)
         syscall = event.syscallnum
-        print(f"SYSCALL:{syscall}")
-        #print(f"SYSCALL:{event.syscallnum} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
+        #print(f"SYSCALL:{syscall}")
+        print(f"SYSCALL:{event.syscallnum} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
 
         # 代入されたシステムコール情報を集約し，ジョブ状態を取得
         # 取得したジョブ状態をスケジューラに通知
-        send_len = sock.sendto(syscall.encode('utf-8'), serv_address)
+        send_len = sock.sendto(str(syscall).encode('utf-8'), serv_address)
         print(f"Completed job state sending SYSCALL:{syscall}")
 
     

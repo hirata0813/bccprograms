@@ -40,13 +40,13 @@ int syscall__openat(struct pt_regs *ctx, int dirfd, const char __user *pathname)
 
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
     if(p != 0){
-        //if(pathname[9] == 's'){
+        if(pathname[9] == 's'){
             data.syscallnum = 1;
             data.time = bpf_ktime_get_ns();
             //bpf_get_current_comm(&data.comm, sizeof(data.comm));
             bpf_probe_read_user(&data.pathname1, sizeof(data.pathname1), (void *)pathname);
             events.perf_submit(ctx, &data, sizeof(struct data_t));
-        //}
+        }
     }
 
     return 0;
