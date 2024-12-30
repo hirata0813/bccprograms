@@ -1,9 +1,6 @@
-
-
-
 #!/usr/bin/python3  
+
 import socket
-import time
 
 M_SIZE = 1024
 
