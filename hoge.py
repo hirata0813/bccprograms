@@ -38,6 +38,9 @@ def main():
     
     # ソケットを作成する
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    # ジョブ状態を格納する配列(第一要素：PID，第二要素：状態 みたいな)
+    state = []
     
     
     def print_event(cpu, data, size):
@@ -48,9 +51,11 @@ def main():
         print(f"SYSCALL:{event.syscallnum} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
 
         # 代入されたシステムコール情報を集約し，ジョブ状態を取得
+        # linkの発行を契機にジョブ切替
+
         # 取得したジョブ状態をスケジューラに通知
         send_len = sock.sendto(str(syscall).encode('utf-8'), serv_address)
-        print(f"Completed job state sending SYSCALL:{syscall}")
+        print(f"Completed job state notification")
 
     
     b["events"].open_perf_buffer(print_event)
