@@ -16,6 +16,7 @@ def get_and_send_state(syscalllog, sock, serv_address):
 def get_syscalllog(bpf, data):
     # BPF MAP の内容を変数に代入
     # 0.01sおきにMAPを読みに行く
+    print("start")
     event = bpf["events"].event(data)
     syscall = event.syscallnum
     pid = event.pid

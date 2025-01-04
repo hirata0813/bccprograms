@@ -41,7 +41,7 @@ int syscall__openat(struct pt_regs *ctx, int dirfd, const char __user *pathname)
 
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
     if(p != 0){
-        if(pathname[9] == 's' && pathname[10] == 'h'){
+        if(pathname[5] == 's' && pathname[6] == 'h'){
             data.syscallnum = 1;
             data.time = bpf_ktime_get_ns();
             data.pid = pid;
@@ -64,7 +64,7 @@ int syscall__link(struct pt_regs *ctx, const char __user *pathname1, const char 
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
 
     if(p != 0){//この中に行いたい処理を書く
-        if((pathname1[9] == 's' && pathname1[10] == 'h') && (pathname2[9] == 's' && pathname[10] == 'h')){
+        if((pathname1[5] == 's' && pathname1[6] == 'h') && (pathname2[5] == 's' && pathname2[6] == 'h')){
             data.syscallnum = 2;
             data.time = bpf_ktime_get_ns();
             data.pid = pid;
@@ -88,7 +88,7 @@ int syscall__unlink(struct pt_regs *ctx, const char __user *pathname){
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
 
     if(p != 0){//この中に行いたい処理を書く
-        if(pathname[9] == 's' && pathname[10] == 'h'){
+        if(pathname[5] == 's' && pathname[6] == 'h'){
             data.syscallnum = 3;
             data.time = bpf_ktime_get_ns();
             data.pid = pid;
