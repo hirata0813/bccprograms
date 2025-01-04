@@ -2,6 +2,7 @@
 #include <linux/fdtable.h>
 struct data_t {
     u64 syscallnum;
+    u64 pid;
     u64 time;
     char pathname1[128];
     char pathname2[128];
@@ -40,9 +41,10 @@ int syscall__openat(struct pt_regs *ctx, int dirfd, const char __user *pathname)
 
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
     if(p != 0){
-        if(pathname[9] == 's'){
+        if(pathname[9] == 's' && pathname[10] == 'h'){
             data.syscallnum = 1;
             data.time = bpf_ktime_get_ns();
+            data.pid = pid;
             //bpf_get_current_comm(&data.comm, sizeof(data.comm));
             bpf_probe_read_user(&data.pathname1, sizeof(data.pathname1), (void *)pathname);
             events.perf_submit(ctx, &data, sizeof(struct data_t));
@@ -62,9 +64,10 @@ int syscall__link(struct pt_regs *ctx, const char __user *pathname1, const char 
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
 
     if(p != 0){//この中に行いたい処理を書く
-        if((pathname1[9] == 's') && (pathname2[9] == 's')){
+        if((pathname1[9] == 's' && pathname1[10] == 'h') && (pathname2[9] == 's' && pathname[10] == 'h')){
             data.syscallnum = 2;
             data.time = bpf_ktime_get_ns();
+            data.pid = pid;
             //bpf_get_current_comm(&data.comm, sizeof(data.comm));
             bpf_probe_read_user(&data.pathname1, sizeof(data.pathname1), (void *)pathname1);
             bpf_probe_read_user(&data.pathname2, sizeof(data.pathname2), (void *)pathname2);
@@ -85,9 +88,10 @@ int syscall__unlink(struct pt_regs *ctx, const char __user *pathname){
     p = ppidlist.lookup(&ppid); //PPIDがBPF MAPに存在するか判定
 
     if(p != 0){//この中に行いたい処理を書く
-        if(pathname[9] == 's'){
+        if(pathname[9] == 's' && pathname[10] == 'h'){
             data.syscallnum = 3;
             data.time = bpf_ktime_get_ns();
+            data.pid = pid;
             //bpf_get_current_comm(&data.comm, sizeof(data.comm));
             bpf_probe_read_user(&data.pathname1, sizeof(data.pathname1), (void *)pathname);
             events.perf_submit(ctx, &data, sizeof(struct data_t));
