@@ -16,11 +16,10 @@ def get_and_send_state(syscalllog, sock, serv_address):
 def get_syscalllog(bpf, data):
     # BPF MAP の内容を変数に代入
     # 0.01sおきにMAPを読みに行く
-    print("start")
     event = bpf["events"].event(data)
     syscall = event.syscallnum
     pid = event.pid
-    print(f"SYSCALL:{syscall} PID:{pid} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
+    #print(f"SYSCALL:{syscall} PID:{pid} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
     print(syscall)
 
 
@@ -81,11 +80,21 @@ def main():
         #get_and_send_state(syscalllog, sock, serv_address)
     
     bpf["events"].open_perf_buffer(notify_jobstate)
+    cnt = 0
     while True:
         try:
+            # この書き方だと，MAPに書き足された回数コールバックが呼ばれる
+            # stateの通知は1回だけしたいので，perf_buffer_pollはあまりよろしくないかも
+            # pythonのapiで定期的にMAPを読みに行くのがまるそう
+            # あるいは，(現時点では)コールバックとして以下の処理
+                # 1. システムコールログを取得
+                # 2. ログを別の変数かファイルに書き出す
+            # やっぱり制御が難しいから，今後のことを考えても定期的に読みに行くのがよい？
+
             bpf.perf_buffer_poll()
-            # 0.01s おきにジョブ状態取得
-            sleep(0.01)
+            print(f"Loop:{cnt}")
+            cnt = cnt + 1
+            # cnt が特定の回数(11回)呼ばれたら通知するとか
         except KeyboardInterrupt:
             exit()
 
