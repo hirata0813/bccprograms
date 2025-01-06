@@ -67,12 +67,12 @@ def main():
             state, cli_addr = sock.recvfrom(M_SIZE)
             state = state.decode(encoding='utf-8')
             print(f'Received message is [{state}]')
-            pid = int(state[0])
+            #pid = int(state[0])
     
             # ジョブ状態を受け取ったら，該当ジョブにシグナルを送信し，再度 hoge からの通知を待つ
             # ジョブを一時停止，ある程度時間が経過したら再開
             # ジョブを識別する PID はこのタイミングでもらう
-            control_process(pid)
+            #control_process(pid)
             print('Completed job switching')
     
     

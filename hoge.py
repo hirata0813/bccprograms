@@ -6,34 +6,43 @@ import ctypes
 import subprocess
 import socket
 
-def get_and_send_state(syscalllog, sock, serv_address):
-    # システムコールログを集約
-
-    # ジョブ状態が取得できたらスケジューラに通知
-        send_state(state, sock, serv_address)
-    # 取得できなければ何もしない
+syscall_log = [] # ログを溜めていく変数
 
 def get_syscalllog(bpf, data):
     # BPF MAP の内容を変数に代入
-    # 0.01sおきにMAPを読みに行く
     event = bpf["events"].event(data)
     syscall = event.syscallnum
     pid = event.pid
     #print(f"SYSCALL:{syscall} PID:{pid} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
-    print(syscall)
+    syscall_log.append(syscall)
 
+def get_and_send_state(sock, serv_address):
+    # システムコールログを集約し，ジョブ状態を取得する
+    state = get_state()
+
+    if state:
+        # ジョブ状態が取得できたらスケジューラに通知
+        send_state(state, sock, serv_address)
+    else: 
+        # 取得できなければ何もしない
+        return
+
+def get_state():
+    # システムコールログを集約
+    # システムコールログが11個溜まったら通知する
+    # システムコールが11個溜まったのを契機にジョブ状態取得
+    if (len(syscall_log) == 11):
+        state = "STATE-CHANGED"
+        return state
+    else:
+        return None
 
 def send_state(state, sock, serv_address):
-    sleep(1)
     # 取得したジョブ状態をスケジューラに通知
-    send_len = sock.sendto(str(syscall).encode('utf-8'), serv_address)
+    send_len = sock.sendto(str(state).encode('utf-8'), serv_address)
     print(f"Completed job state notification")
-
-def get_state_from_syscall():
-    # 代入されたシステムコール情報を集約し，ジョブ状態を取得
-    # システムコール
-    # linkの発行を契機にジョブ切替
-    sleep(1)
+    # システムコールログの配列を空にする
+    syscall_log.clear()
 
 def main():
     # 監視対象プログラムを起動
@@ -45,7 +54,6 @@ def main():
     rootid = int(open('rootid.txt', 'r', encoding='UTF-8').read()) # TODO: pgrep で複数の PID が取れる場合に対応させる
     rootid = ctypes.c_uint(rootid)
     subprocess.run("rm -rf rootid.txt", shell=True)
-    
     
     # eBPFをロード
     bpf = BPF(src_file="./hoge.bpf.c")
@@ -74,27 +82,15 @@ def main():
     
     def notify_jobstate(cpu, data, size):
         # BPF MAP にアクセスしシステムコール情報を取得
-        syscalllog = get_syscalllog(bpf, data)
+        get_syscalllog(bpf, data)
 
         # システムコールからジョブ状態を取得し，スケジューラに通知
-        #get_and_send_state(syscalllog, sock, serv_address)
+        get_and_send_state(sock, serv_address)
     
     bpf["events"].open_perf_buffer(notify_jobstate)
-    cnt = 0
     while True:
         try:
-            # この書き方だと，MAPに書き足された回数コールバックが呼ばれる
-            # stateの通知は1回だけしたいので，perf_buffer_pollはあまりよろしくないかも
-            # pythonのapiで定期的にMAPを読みに行くのがまるそう
-            # あるいは，(現時点では)コールバックとして以下の処理
-                # 1. システムコールログを取得
-                # 2. ログを別の変数かファイルに書き出す
-            # やっぱり制御が難しいから，今後のことを考えても定期的に読みに行くのがよい？
-
             bpf.perf_buffer_poll()
-            print(f"Loop:{cnt}")
-            cnt = cnt + 1
-            # cnt が特定の回数(11回)呼ばれたら通知するとか
         except KeyboardInterrupt:
             exit()
 
