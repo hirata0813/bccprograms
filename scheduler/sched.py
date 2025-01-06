@@ -5,6 +5,7 @@ import os
 import errno
 import signal
 import time
+import json
 
 # PID を受け取り，その PID を持つプロセスにシグナル送信
 def send_signal(pid, signal):
@@ -47,17 +48,15 @@ def control_process(pid):
 def main():
     M_SIZE = 1024
     
-    # 
     host = '127.0.0.1'
     port = 8890
     
     locaddr = (host, port)
     
-    # ①ソケットを作成する
+    # ソケット作成
     sock = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
-    print('create socket')
     
-    # ②自ホストで使用するIPアドレスとポート番号を指定
+    # 自ホストで使用するIPアドレスとポート番号を指定
     sock.bind(locaddr)
     
     while True:
@@ -65,15 +64,19 @@ def main():
             # hogeからジョブ状態が送られてくるのを待つ
             print('Waiting message')
             state, cli_addr = sock.recvfrom(M_SIZE)
+            # 受信内容をデコード
+            state_json = state.decode()
+            state_dict = json.loads(state_json)
+            print(data_dict)
             state = state.decode(encoding='utf-8')
             print(f'Received message is [{state}]')
-            #pid = int(state[0])
+            #pid, stateid = int(state[0])
     
-            # ジョブ状態を受け取ったら，該当ジョブにシグナルを送信し，再度 hoge からの通知を待つ
-            # ジョブを一時停止，ある程度時間が経過したら再開
-            # ジョブを識別する PID はこのタイミングでもらう
-            #control_process(pid)
-            print('Completed job switching')
+            #if(stateid == 1):
+            #    # stateid が 1 なら，control_process を呼んで，ジョブの一時停止，再開を行う
+            #    control_process(pid)
+
+            #    print('Completed job switching')
     
     
         except KeyboardInterrupt:

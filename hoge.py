@@ -5,19 +5,27 @@ from time import sleep
 import ctypes
 import subprocess
 import socket
+import json
 
 syscall_log = [] # ログを溜めていく変数
+pidlist = [] # ジョブのPIDを格納する変数，スケジューラに通知する用
 
 def get_syscalllog(bpf, data):
-    # BPF MAP の内容を変数に代入
+    # BPF MAP にアクセスし，システムコールログを取得する関数
     event = bpf["events"].event(data)
     syscall = event.syscallnum
     pid = event.pid
-    #print(f"SYSCALL:{syscall} PID:{pid} PATH1:{event.pathname1.decode()} PATH2:{event.pathname2.decode()}")
+
+    # BPF MAP の内容を変数に代入
     syscall_log.append(syscall)
 
+    if pid not in pidlist:
+        pidlist.append(pid)
+
 def get_and_send_state(sock, serv_address):
-    # システムコールログを集約し，ジョブ状態を取得する
+    # システムコールからジョブ状態を取得し，スケジューラに通知する関数
+
+    # ジョブ状態の取得
     state = get_state()
 
     if state:
@@ -28,19 +36,29 @@ def get_and_send_state(sock, serv_address):
         return
 
 def get_state():
-    # システムコールログを集約
-    # システムコールログが11個溜まったら通知する
+    # システムコールログを集約し，ジョブ状態を取得する関数
+
     # システムコールが11個溜まったのを契機にジョブ状態取得
     if (len(syscall_log) == 11):
-        state = "STATE-CHANGED"
+        # ジョブ状態の形式として，PIDと状態IDが必要
+        # {'pid':xxxxx, 'stateid':1}的な
+
+        state = {"pidlist":pidlist, "stateid":1}
+
         return state
     else:
         return None
 
 def send_state(state, sock, serv_address):
-    # 取得したジョブ状態をスケジューラに通知
-    send_len = sock.sendto(str(state).encode('utf-8'), serv_address)
+    # 取得したジョブ状態をスケジューラに通知する関数
+
+    # エンコード
+    stateToJson = json.dumps(state)
+    stateToBin = stateToJson.encode('utf-8')
+    
+    sock.sendto(stateToJson, serv_address)
     print(f"Completed job state notification")
+
     # システムコールログの配列を空にする
     syscall_log.clear()
 
@@ -64,22 +82,14 @@ def main():
     
     # eBPFプログラムをkprobeにアタッチ
     bpf.attach_kprobe(event=bpf.get_syscall_fnname("execve"), fn_name="syscall__execve")
-    #bpf.attach_kprobe(event=bpf.get_syscall_fnname("openat"), fn_name="syscall__openat")
     bpf.attach_kprobe(event=bpf.get_syscall_fnname("link"), fn_name="syscall__link")
-    #bpf.attach_kprobe(event=bpf.get_syscall_fnname("unlink"), fn_name="syscall__unlink")
 
-    M_SIZE = 1024
-    
-    # スケジューラが動作する計算機のアドレスを用意
+    # スケジューラが動作する計算機のIPアドレスを用意
     serv_address = ('127.0.0.1', 8890)
     
-    # ソケットを作成する
+    # ソケット作成
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    # ジョブ状態を格納する配列(第一要素：PID，第二要素：状態 みたいな)
-    state = []
-    
-    
     def notify_jobstate(cpu, data, size):
         # BPF MAP にアクセスしシステムコール情報を取得
         get_syscalllog(bpf, data)
