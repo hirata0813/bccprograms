@@ -56,7 +56,8 @@ def send_state(state, sock, serv_address):
     stateToJson = json.dumps(state)
     stateToBin = stateToJson.encode('utf-8')
     
-    sock.sendto(stateToJson, serv_address)
+    # スケジューラに通知
+    sock.sendto(stateToBin, serv_address)
     print(f"Completed job state notification")
 
     # システムコールログの配列を空にする

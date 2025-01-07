@@ -64,20 +64,18 @@ def main():
             # hogeからジョブ状態が送られてくるのを待つ
             print('Waiting message')
             state, cli_addr = sock.recvfrom(M_SIZE)
-            # 受信内容をデコード
-            state_json = state.decode()
-            state_dict = json.loads(state_json)
-            print(data_dict)
-            state = state.decode(encoding='utf-8')
-            print(f'Received message is [{state}]')
-            #pid, stateid = int(state[0])
-    
-            #if(stateid == 1):
-            #    # stateid が 1 なら，control_process を呼んで，ジョブの一時停止，再開を行う
-            #    control_process(pid)
+            print(f"Cli_addr:{cli_addr}")
 
-            #    print('Completed job switching')
+            # 受信内容をデコード
+            state_json = state.decode(encoding='utf-8')
+            state_dict = json.loads(state_json)
+
+            pid, stateid = state_dict['pidlist'][0], state_dict['stateid']
     
+            if(stateid == 1):
+                # stateid が 1 なら，control_process を呼んで，ジョブの一時停止，再開を行う
+                control_process(pid)
+                print('Completed job switching')
     
         except KeyboardInterrupt:
             print ('\n . . .\n')
