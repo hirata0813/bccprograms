@@ -15,6 +15,8 @@ def get_syscalllog(bpf, data):
     event = bpf["events"].event(data)
     syscall = event.syscallnum
     pid = event.pid
+    t1 = event.time
+    print(t1)
 
     # BPF MAP の内容を変数に代入
     syscall_log.append(syscall)
@@ -96,7 +98,7 @@ def main():
         get_syscalllog(bpf, data)
 
         # システムコールからジョブ状態を取得し，スケジューラに通知
-        get_and_send_state(sock, serv_address)
+        #get_and_send_state(sock, serv_address)
     
     bpf["events"].open_perf_buffer(notify_jobstate)
     while True:
