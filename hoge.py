@@ -1,7 +1,7 @@
 #!/usr/bin/python3  
 
 from bcc import BPF
-from time import sleep
+import time
 import ctypes
 import subprocess
 import socket
@@ -15,8 +15,14 @@ def get_syscalllog(bpf, data):
     event = bpf["events"].event(data)
     syscall = event.syscallnum
     pid = event.pid
+    # t2: syscall 取得
+    t2 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+
+    # t1: syscall 発行の瞬間
     t1 = event.time
-    print(t1)
+
+    print(f"T1: {t1}")
+    print(f"T2: {t2}")
 
     # BPF MAP の内容を変数に代入
     syscall_log.append(syscall)
@@ -46,6 +52,10 @@ def get_state():
         # {'pid':xxxxx, 'stateid':1}的な
 
         state = {"pidlist":pidlist, "stateid":1}
+        
+        # t3: jobstate 取得
+        t3 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+        print(f"T3: {t3}")
 
         return state
     else:
@@ -61,6 +71,9 @@ def send_state(state, sock, serv_address):
     # スケジューラに通知
     sock.sendto(stateToBin, serv_address)
     print(f"Completed job state notification")
+    # t4: jobstate notify
+    t4 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+    print(f"T4: {t4}")
 
     # システムコールログの配列を空にする
     syscall_log.clear()
@@ -69,7 +82,7 @@ def main():
     # 監視対象プログラムを起動
     subprocess.run("./tracing_targets.sh &", shell=True)
     
-    sleep(1)
+    time.sleep(1)
     # 監視対象プログラムのPIDを取得
     subprocess.run("pgrep tracing_targets > rootid.txt", shell=True)
     rootid = int(open('rootid.txt', 'r', encoding='UTF-8').read()) # TODO: pgrep で複数の PID が取れる場合に対応させる
@@ -98,7 +111,7 @@ def main():
         get_syscalllog(bpf, data)
 
         # システムコールからジョブ状態を取得し，スケジューラに通知
-        #get_and_send_state(sock, serv_address)
+        get_and_send_state(sock, serv_address)
     
     bpf["events"].open_perf_buffer(notify_jobstate)
     while True:

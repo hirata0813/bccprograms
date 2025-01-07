@@ -19,6 +19,9 @@ def suspend_process(pid):
     try:
         send_signal(pid, signal.SIGSTOP)
         print("Process has been suspended.")
+        # t5: SIGSTOP send    
+        t5 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)                
+        print(f"T5: {t5}")
 
         # SIGSTOP送信時のタイムスタンプを取得
         #with open("sigstop.log","a") as f:
