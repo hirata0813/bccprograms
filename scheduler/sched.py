@@ -18,14 +18,12 @@ def send_signal(pid, signal):
 def suspend_process(pid):
     try:
         send_signal(pid, signal.SIGSTOP)
-        print("Process has been suspended.")
-        # t5: SIGSTOP send    
-        t5 = time.clock_gettime_ns(time.CLOCK_MONOTONIC)                
-        print(f"T5: {t5}")
+        # t4: SIGSTOP send    
+        t4 = time.clock_gettime_ns(time.CLOCK_MONOTONIC) * 10**(-9)
 
         # SIGSTOP送信時のタイムスタンプを取得
-        #with open("sigstop.log","a") as f:
-        #    print("{}".format(time.time()), file=f)
+        with open("t4.log","a") as f:
+            print(f"{t4}", file=f)
     
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -33,11 +31,6 @@ def suspend_process(pid):
 def restart_process(pid):
     try:
         send_signal(pid, signal.SIGCONT)
-        print("Process has been restarted.")
-    
-        # SIGCONT送信時のタイムスタンプを取得
-        #with open("sigcont.log","a") as f:
-        #    print("{}".format(time.time()), file=f)
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -65,9 +58,7 @@ def main():
     while True:
         try :
             # hogeからジョブ状態が送られてくるのを待つ
-            print('Waiting message')
             state, cli_addr = sock.recvfrom(M_SIZE)
-            print(f"Cli_addr:{cli_addr}")
 
             # 受信内容をデコード
             state_json = state.decode(encoding='utf-8')
@@ -78,7 +69,6 @@ def main():
             if(stateid == 1):
                 # stateid が 1 なら，control_process を呼んで，ジョブの一時停止，再開を行う
                 control_process(pid)
-                print('Completed job switching')
     
         except KeyboardInterrupt:
             print ('\n . . .\n')
