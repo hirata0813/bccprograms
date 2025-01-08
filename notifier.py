@@ -103,7 +103,7 @@ def main():
     subprocess.run("rm -rf rootid.txt", shell=True)
     
     # eBPFをロード
-    bpf = BPF(src_file="./hoge.bpf.c")
+    bpf = BPF(src_file="./code.bpf.c")
     print("Load eBPF program")
     
     # ppidlistに監視対象プログラムのPIDを登録

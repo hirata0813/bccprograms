@@ -57,7 +57,7 @@ def main():
     
     while True:
         try :
-            # hogeからジョブ状態が送られてくるのを待つ
+            # notifierからジョブ状態が送られてくるのを待つ
             state, cli_addr = sock.recvfrom(M_SIZE)
 
             # 受信内容をデコード
