@@ -78,7 +78,7 @@ def send_state(state, sock, serv_address):
     ts[3] = t3
 
     # t0-3をファイルに出力
-    with open("t0-3.log","a") as f:
+    with open("t0-3.csv","a") as f:
         print(f"{ts[0]}, {ts[1]}, {ts[2]}, {ts[3]}", file=f)
 
     # システムコールログの配列を空にする
@@ -87,10 +87,12 @@ def send_state(state, sock, serv_address):
 
 def main():
     # ログファイルを削除
-    if (os.path.isfile("./t0-3.log")):
-        os.remove("./t0-3.log")
-    if (os.path.isfile("./t4.log")):
-        os.remove("./t4.log")
+    if (os.path.isfile("./t0-3.csv")):
+        os.remove("./t0-3.csv")
+    if (os.path.isfile("./t4-5.csv")):
+        os.remove("./t4-5.csv")
+    if (os.path.isfile("./rootid.txt")):
+        os.remove("./rootid.txt")
 
     # 監視対象プログラムを起動
     subprocess.run("./tracing_targets.sh &", shell=True)
