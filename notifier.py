@@ -72,10 +72,11 @@ def send_state(state, sock, serv_address):
     
     # スケジューラに通知
     sock.sendto(stateToBin, serv_address)
-    print(f"Completed job state notification")
+
     # t3: jobstate notify
     t3 = time.clock_gettime_ns(time.CLOCK_MONOTONIC) * 10**(-9)
     ts[3] = t3
+    print(f"Completed job state notification")
 
     # t0-3をファイルに出力
     with open("t0-3.csv","a") as f:
@@ -83,6 +84,8 @@ def send_state(state, sock, serv_address):
 
     # システムコールログの配列を空にする
     syscall_log.clear()
+    # PIDリストの配列を空にする
+    pidlist.clear()
 
 
 def main():
