@@ -35,7 +35,7 @@ def restart_process(pid):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def control_process(t4, pid):
+def switch_process(t4, pid):
     # ここでGPUプログラムの停止・再開を行う
     suspend_process(t4, pid)
     time.sleep(3)
@@ -71,7 +71,7 @@ def main():
     
             if(stateid == 1):
                 # stateid が 1 なら，control_process を呼んで，ジョブの一時停止，再開を行う
-                control_process(t4, pid)
+                switch_process(t4, pid)
     
         except KeyboardInterrupt:
             print ('\n . . .\n')
